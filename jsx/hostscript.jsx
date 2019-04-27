@@ -2,6 +2,9 @@
 /*global $, Folder*/
 
 
-function sayHello(){
-    alert("hello from ExtendScript");
+function openFile(array){
+    for(var i=0;i<array.length;i++){
+        var f = new File(array[i]);//ファイルオープンのため一度オブジェクト化
+        app.open(f);
+    }
 }

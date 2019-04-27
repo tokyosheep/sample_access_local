@@ -7,12 +7,19 @@ window.onload = function(){
     `use strict`;
     const csInterface = new CSInterface();
     themeManager.init();
+    prevent_drag_event();//ウインドウに対してデフォルトのドラッグイベントの防止
     const dir_home = process.env[process.platform == `win32` ? `USERPROFILE` : `HOME`];
     const dir_desktop = require(`path`).join(dir_home, `Desktop`);//デスクトップパス
     
     const open_window = document.getElementById(`open_window`);
     const save_window = document.getElementById(`save_window`);
     const opned_file_list = document.getElementById(`opned_file_list`);
+    const drop = document.getElementById(`drop`);
+    const drop_list = document.getElementById(`drop_list`);
+    
+    const open_window_list = document.getElementById(`open_window_list`);
+    const open_drag_list = document.getElementById(`open_drag_list`);
+    
     
      /**
      * Displays the OS File Open dialog, allowing the user to select files or directories.
@@ -47,8 +54,12 @@ window.onload = function(){
     */
     open_window.addEventListener(`click`,()=>{
         const f = cep.fs.showOpenDialog(true,false,`open`,dir_desktop,[`jpg`]);
+        console.log(f);
         make_list(opned_file_list,f.data);
-        function make_list(list,array){
+        const windowDocument = new OpenDocuments(f.data,open_window_list);
+    });
+    
+    function make_list(list,array){
             while(list.firstChild){
                 list.removeChild(list.firstChild);
             }
@@ -57,8 +68,7 @@ window.onload = function(){
                 li.textContent = v;
                 list.appendChild(li);
             });
-        }
-    });
+    }
     
     /**
      * Displays the OS File Save dialog, allowing the user to type in a file name.
@@ -104,5 +114,57 @@ window.onload = function(){
         const s = cep.fs.showSaveDialogEx(`save`,dir_desktop,["gif", "jpg", "jpeg", "png"],`picture`,`*`,`保存する?`,`御用は?`);
         console.log(s);
     });
+    
+    
+    class Drag{
+        constructor(area,list){
+            this.area = area;
+            this.list = list;
+            
+            this.area.addEventListener(`dropover`,this.handleDragOver);
+            this.area.addEventListener(`drop`,this);
+        }
+        
+        handleDragOver(e){
+            e.stopPropagation();
+            e.preventDefault();
+            e.dataTransfer.dropEffect = `copy`;
+        }
+        
+        handleEvent(e){
+            e.stopPropagation();
+            e.preventDefault();
+            const files = Array.from(e.dataTransfer.files);
+            console.log(files);
+            while(this.area.firstChild){
+                this.area.removeChild(this.area.firstChild);
+            }
+            files.forEach(v=>{
+                const li = document.createElement(`li`);
+                li.textContent = v.name;
+                li.dataset.path = v.path;
+                this.area.appendChild(li);
+            });
+           const openDrag = new OpenDocuments(files.map(v => v.path),open_drag_list);
+        }
+    }
+    const drag = new Drag(drop,drop_list);
+    
+    class OpenDocuments{
+        constructor(area,btn){
+            this.area = area;
+            this.btn = btn;
+            console.log(this.area);
+            this.btn.addEventListener(`click`,this);
+        }
+        
+        handleEvent(){
+            csInterface.evalScript(`openFile(${JSON.stringify(this.area)})`);
+        }
+        
+        
+    }
+    
+    
 }
     

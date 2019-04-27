@@ -17,7 +17,11 @@
     width: 100%;
 }
 
-
+#drop{
+    width: 200px;
+    height: 200px;
+    border: solid 1px white;
+}
 
 
 /*
